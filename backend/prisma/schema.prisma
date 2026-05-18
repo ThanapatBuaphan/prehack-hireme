@@ -12,18 +12,91 @@ datasource db {
   provider = "sqlite"
 }
 
-model MultiplicationRecord {
-  id        Int      @id @default(autoincrement())
-  a         Float
-  b         Float
-  result    Float
-  createdAt DateTime @default(now())
+model User {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  // password        String                   IDK IF WE NEEDED THIS
+  firstName       String
+  lastName        String
+  gender          String
+  avatar          String?
+  resume          String?
+  phoneNumber     String   @unique
+  bio             String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  educations Education []
+  workexperinces workExperience []
+
+  members CompanyMembers[]
 }
 
-model AdditionRecord {
-  id        Int      @id @default(autoincrement())
-  a         Float
-  b         Float
-  result    Float
-  createdAt DateTime @default(now())
+model Company {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  // password        String                 IDK IF WE NEEDED THIS
+  companyName     String   @unique
+  logo            String?
+  type            String?
+  
+
+  createdAt       DateTime
+  updatedAt       DateTime @updatedAt
+
+  members  CompanyMembers[]
+  // posts    Post[]
 }
+
+model CompanyMembers{
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  companyId       Int
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  status          String
+  role            String
+  joinedAt        DateTime
+  endedAt         DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, companyId])
+}
+
+model Education {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  schoolName        String
+  grade             String
+  major             String?
+  logo              String?
+  joinedAt          DateTime
+  endedAt           DateTime
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+}
+
+model workExperience {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  companyName       String
+  role              String
+  workinghere       Boolean @default(false)
+  joinedAt          DateTime
+  endedAt           DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+}
+
+// model Post {
+//   id                Int      @id @default(autoincrement())
+//   description       String
+//   createdAt         DateTime @default(now())
+
+//   userId            Int
+//   user              User @relation(fields: [userId], references: [id])
+// }
