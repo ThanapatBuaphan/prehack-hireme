@@ -1,8 +1,9 @@
 import express from "express";
-import { createApplyController } from "../controllers/apply.controller";
+import {createApplyController, updateApplyStatusController} from "../controllers/apply.controller";
 
 const router = express.Router();
 
 router.post("/", createApplyController);
+router.patch("/:id/status", updateApplyStatusController);
 
 export default router;

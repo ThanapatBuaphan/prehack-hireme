@@ -68,3 +68,21 @@ export const createApply = async (
     },
   });
 };
+
+export const updateApplyStatus = async (
+  applyId: number,
+  status: "accepted" | "rejected"
+) => {
+  if (status !== "accepted" && status !== "rejected") {
+    throw new Error("Invalid application status");
+  }
+
+  return prisma.apply.update({
+    where: {
+      id: applyId,
+    },
+    data: {
+      status,
+    },
+  });
+};
