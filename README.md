@@ -1,4 +1,4 @@
-# CSC105-G04-Bellmen-HireMe
+# prehack-hireme
 # Recruitment & Career Development Application
 # Scope
 This project is a website that makes finding and hiring for jobs easy. Companies can post jobs and see people who apply. Job seekers can search for jobs and apply quickly using their profile and resume. It is a simple tool to help companies hire the right people and help users find the proper jobs.
