@@ -26,12 +26,14 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  educations Education []
-  workexperinces workExperience []
-  locationId     Int?
-  location       Location? @relation(fields: [locationId], references: [id])
+  educations      Education []
+  workexperinces  workExperience []
+  locationId      Int?
+  location        Location? @relation(fields: [locationId], references: [id])
 
-  members CompanyMembers[]
+  members         CompanyMembers[]
+
+  applies         Apply[] @relation("Apply")
 }
 
 model Company {
@@ -50,7 +52,10 @@ model Company {
   members  CompanyMembers[]
   locationId      Int?
   location        Location? @relation(fields: [locationId], references: [id])
-  // posts    Post[]
+
+  posts Post[]
+
+  applies Apply[] @relation("Applicants")
 }
 
 model CompanyMembers{
@@ -109,15 +114,37 @@ model Location {
   updatedAt         DateTime @updatedAt
 
   companies Company[]
-
   users User[]
 }
 
-// model Post {
-//   id                Int      @id @default(autoincrement())
-//   description       String
-//   createdAt         DateTime @default(now())
+model Post {
+  id                Int      @id @default(autoincrement())
+  jobtitle          String
+  location          String
+  requirements      String
+  Salary            Float
+  description       String?
 
-//   userId            Int
-//   user              User @relation(fields: [userId], references: [id])
-// }
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  companyId         Int
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  applies Apply[]
+}
+
+model Apply {
+  id                Int      @id @default(autoincrement())
+  message           String
+  status            String   @default("pending")
+  createdAt         DateTime @default(now())
+
+  userId            Int
+  companyId         Int
+  postId            Int?
+
+  userapply         User     @relation("Apply", fields: [userId], references: [id])
+  companyhire       Company  @relation("Applicants", fields: [companyId], references: [id])
+  post              Post?    @relation(fields: [postId], references: [id])
+}
