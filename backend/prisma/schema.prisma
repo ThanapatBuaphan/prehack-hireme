@@ -12,34 +12,43 @@ datasource db {
   provider = "sqlite"
 }
 
+model Account {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      String   // "user" or "company"
+  createdAt DateTime @default(now())
+
+  user      User?
+  company   Company?
+}
+
 model User {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique
-  // password        String                   IDK IF WE NEEDED THIS
-  firstName       String
-  lastName        String
-  gender          String
-  avatar          String?
-  resume          String?
-  phoneNumber     String   @unique
-  bio             String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  firstName         String
+  lastName          String
+  gender            String
+  avatar            String?
+  resume            String?
+  phoneNumber       String   @unique
+  bio               String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  accountId         Int     @unique
+  account           Account @relation(fields: [accountId], references: [id])
+  educations        Education []
+  workexperinces    workExperience []
+  locationId        Int?
+  location          Location? @relation(fields: [locationId], references: [id])
 
-  educations      Education []
-  workexperinces  workExperience []
-  locationId      Int?
-  location        Location? @relation(fields: [locationId], references: [id])
+  members           CompanyMembers[]
 
-  members         CompanyMembers[]
-
-  applies         Apply[] @relation("Apply")
+  applies           Apply[] @relation("Apply")
 }
 
 model Company {
   id              Int      @id @default(autoincrement())
   email           String   @unique
-  // password        String                 IDK IF WE NEEDED THIS
   companyName     String   @unique
   logo            String?
   type            String?
@@ -48,8 +57,9 @@ model Company {
 
   createdAt       DateTime
   updatedAt       DateTime @updatedAt
-
-  members  CompanyMembers[]
+  accountId       Int     @unique
+  account         Account @relation(fields: [accountId], references: [id])
+  members         CompanyMembers[]
   locationId      Int?
   location        Location? @relation(fields: [locationId], references: [id])
 
@@ -65,7 +75,7 @@ model CompanyMembers{
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   status          String
-  role            String
+  roles           String
   joinedAt        DateTime
   endedAt         DateTime?
 
