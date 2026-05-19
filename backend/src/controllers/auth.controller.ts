@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
-import { prisma, Account } from "../db";
+import { prisma } from "../db";
 import jwt from "jsonwebtoken";
 import { JwtPayload } from "../middlewares/auth.js";
+import { Account } from '../../generated/prisma/client';
 
 const generateToken = (account: Account, profileId: number): string => {
   const payload: JwtPayload = {
