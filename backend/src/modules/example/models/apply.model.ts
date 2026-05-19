@@ -86,3 +86,18 @@ export const updateApplyStatus = async (
     },
   });
 };
+
+export const getIncomingApplicants = async (companyId: number) => {
+  return prisma.apply.findMany({
+    where: {
+      companyId,
+    },
+    include: {
+      userapply: true,
+      post: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    }
+  })
+}
