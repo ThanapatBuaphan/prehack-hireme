@@ -2,6 +2,7 @@ import { useState } from "react";
 import ApplicationCard, {
   type JobApplication,
 } from "../components/applicationCard";
+import { useDrawer } from "../../../context/DrawerContext";
 
 const mockApplications: JobApplication[] = [
   {
@@ -70,6 +71,7 @@ const mockApplications: JobApplication[] = [
 ];
 
 export default function JobApplicantsPage() {
+  const { setOpen } = useDrawer();
   const [applications, setApplications] = useState(mockApplications);
 
   function deleteApplication(applicationId: number) {
@@ -84,6 +86,7 @@ export default function JobApplicantsPage() {
         <div className="mb-4 flex items-center gap-4 border-b border-[#eeeeee] bg-white px-3 py-3 md:hidden">
           <button
             type="button"
+            onClick={() => setOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-md text-2xl"
           >
             ☰

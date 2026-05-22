@@ -48,16 +48,39 @@ interface ProfileContextType {
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
+const DEVELOPMENT_FALLBACK_JOB_PROFILE: UserProfile = {
+  accountId: 1,
+  email: "john@example.com",
+  role: "user",
+  firstName: "John",
+  lastName: "Doe",
+};
+
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = useState<UserProfile | null>(() => {
     const stored = authService.getStoredUser();
-    return stored ?? null;
+
+    if (stored) {
+      return stored;
+    }
+
+    if (import.meta.env.DEV && !authService.isLoggedIn()) {
+      return DEVELOPMENT_FALLBACK_JOB_PROFILE;
+    }
+
+    return null;
   });
   const [posts, setPosts] = useState<JobPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function fetchProfile() {
     if (!authService.isLoggedIn()) { 
+      if (import.meta.env.DEV) {
+        setProfileState(DEVELOPMENT_FALLBACK_JOB_PROFILE);
+        setLoading(false);
+        return;
+      }
+
       setLoading(false); 
       setProfileState(null); 
       return; 
@@ -69,7 +92,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("user", JSON.stringify(user));
     } catch (error) {
       console.error("Failed to fetch profile:", error);
-      setProfileState(null);
+
+      if (import.meta.env.DEV) {
+        setProfileState(DEVELOPMENT_FALLBACK_JOB_PROFILE);
+      } else {
+        setProfileState(null);
+      }
     } finally {
       setLoading(false);
     }

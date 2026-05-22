@@ -18,38 +18,48 @@ import ComMyPost from "./pages/CompanySide/comMyPost";
 import ComMyPostEdit from "./pages/CompanySide/comMyPostEdit";
 import ComApplicants from "./pages/CompanySide/comApplicants";
 import ComProfile from "./modules/Profile/pages/comProfile";
-
-import JobHome from "./pages/JobSeekerSide/jobHome";
-import JobApplicants from "./pages/JobSeekerSide/jobApplicants";
+import JobHome from "./modules/easyApplication/pages/jobHomePage";
+import JobApplicants from "./modules/easyApplication/pages/jobApplicantsPage";
 import JobProfile from "./modules/Profile/pages/jobProfile";
+
+function normalizeRole(role?: string | null) {
+  return role?.trim().toLowerCase();
+}
 
 export default function App() {
   const { profile } = useProfile();
+  const role = normalizeRole(profile?.role);
+  const isCompany = role === "company";
+  const isJobSeeker =
+    role === "user" || role === "jobseeker" || role === "job_seeker";
 
   return (
     <BrowserRouter>
-      <div className="flex min-h-screen bg-[#F8FAF9]">
-        
-        {profile && profile.role === "company" && <SidebarCom />}
-        {profile && profile.role === "user" && <SidebarJob />}
+      <div className="min-h-screen overflow-x-hidden bg-[#F8FAF9]">
 
-        <main className="flex-1 overflow-y-auto">
+        {isCompany && <SidebarCom />}
+        {isJobSeeker && <SidebarJob />}
+
+        <div
+          className={`min-w-0 transition-all ${profile ? "pt-0 pl-0 md:pl-[260px]" : "pl-0"
+            }`}
+        >
           <Routes>
-            
-            <Route 
-              path="/" 
+
+            <Route
+              path="/"
               element={
-                !profile ? <Navigate to="/LoginPage" /> : 
-                profile.role === "company" ? <Navigate to="/comHome" /> : <Navigate to="/jobHome" />
-              } 
+                !profile ? <Navigate to="/LoginPage" /> :
+                  isCompany ? <Navigate to="/comHome" /> : <Navigate to="/jobHome" />
+              }
             />
             <Route path="/LoginPage" element={<LoginPage />} />
             <Route path="/CreateAcc1" element={<CreateAcc1 />} />
-            
+
             {/* สเตปสมัครงานฝั่งบริษัท */}
             <Route path="/CreateAcc2com" element={<CreateAcc2com />} />
             <Route path="/CreateAcc3com" element={<CreateAcc3com />} />
-            
+
             {/* สเตปสมัครงานฝั่งคนหางาน */}
             <Route path="/CreateAcc2user" element={<CreateAcc2user />} />
             <Route path="/CreateAcc3user" element={<CreateAcc3user />} />
@@ -57,8 +67,8 @@ export default function App() {
             <Route path="/comHome" element={<ComHome />} />
             <Route path="/comCreatePost" element={<ComCreatePost />} />
             <Route path="/comMyPost" element={<ComMyPost />} />
-            
-            <Route path="/comMyPostEdit/:id" element={<ComMyPostEdit />} /> 
+
+            <Route path="/comMyPostEdit/:id" element={<ComMyPostEdit />} />
             <Route path="/comApplicants" element={<ComApplicants />} />
             <Route path="/comProfile" element={<ComProfile />} />
 
@@ -69,8 +79,7 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
 
           </Routes>
-        </main>
-
+        </div>
       </div>
     </BrowserRouter>
   );

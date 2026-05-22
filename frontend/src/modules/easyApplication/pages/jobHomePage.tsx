@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import JobCard, { type JobPosting } from "../components/jobCard";
 import JobDetail from "../components/jobDetail";
+import { useDrawer } from "../../../context/DrawerContext";
 // import SearchBar from "../components/searchBar";
 
 const initialJobs: JobPosting[] = [
@@ -127,7 +128,8 @@ function matchesSearch(job: JobPosting, query: string) {
 }
 
 export default function JobHomePage() {
-  const [searchValue, setSearchValue] = useState("");
+  const { setOpen } = useDrawer();
+  const searchValue = "";
   const [jobs, setJobs] = useState(initialJobs);
 
   const [selectedJobId, setSelectedJobId] = useState<number | null>(
@@ -158,6 +160,7 @@ export default function JobHomePage() {
         <div className="mb-4 flex items-center gap-4 border-b border-[#eeeeee] bg-white px-3 py-3 md:hidden">
           <button
             type="button"
+            onClick={() => setOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-md text-2xl"
           >
             ☰
