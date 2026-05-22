@@ -10,9 +10,9 @@ export default function CreateAcc1() {
   const handleContinue = () => {
     if (!selectedRole) return;
     if (selectedRole === "jobseeker") {
-      navigate("/create-account/2/user");
+      navigate("/CreateAcc2user");
     } else {
-      navigate("/create-account/2/company");
+      navigate("/CreateAcc2com");
     }
   };
 
