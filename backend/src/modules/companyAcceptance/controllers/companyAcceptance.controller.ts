@@ -1,9 +1,15 @@
 import { Request, Response } from "express";
-import { createApply, updateApplyStatus, getIncomingApplicants } from "../models/apply.model";
+import { createApply, updateApplyStatus, getIncomingApplicants } from "../models/companyAcceptance.model";
 
 export const getIncomingApplicantsController = async (req: Request, res: Response) => {
   try {
     const companyId = Number(req.params.companyId);
+
+    if (!Number.isInteger(companyId) || companyId < 1) {
+      return res.status(400).json({
+        message: "Invalid companyId",
+      });
+    }
 
     const applicants = await getIncomingApplicants(companyId);
 
@@ -12,6 +18,8 @@ export const getIncomingApplicantsController = async (req: Request, res: Respons
       data: applicants,
     });
   } catch (error) {
+    console.error("Failed to fetch incoming applicants:", error);
+
     return res.status(400).json({
       message: error instanceof Error ? error.message: "Failed to fetch applicants",
     });

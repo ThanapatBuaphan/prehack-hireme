@@ -1,5 +1,5 @@
 import express from "express";
-import {createApplyController, updateApplyStatusController, getIncomingApplicantsController} from "../controllers/apply.controller";
+import {createApplyController, updateApplyStatusController, getIncomingApplicantsController} from "../controllers/companyAcceptance.controller";
 
 const router = express.Router();
 

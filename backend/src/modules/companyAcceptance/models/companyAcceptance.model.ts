@@ -93,7 +93,29 @@ export const getIncomingApplicants = async (companyId: number) => {
       companyId,
     },
     include: {
-      userapply: true,
+      userapply: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          phoneNumber: true,
+          avatar: true,
+          resume: true,
+          educations: {
+            select: {
+              schoolName: true,
+              grade: true,
+              major: true,
+            },
+          },
+          workexperinces: {
+            select: {
+              companyName: true,
+              role: true,
+            },
+          },
+        },
+      },
       post: true,
     },
     orderBy: {
