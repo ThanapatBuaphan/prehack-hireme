@@ -17,25 +17,23 @@ import ComCreatePost from "./pages/CompanySide/comCreatePost";
 import ComMyPost from "./pages/CompanySide/comMyPost";
 import ComMyPostEdit from "./pages/CompanySide/comMyPostEdit";
 import ComApplicants from "./pages/CompanySide/comApplicants";
-import ComProfile from "./pages/CompanySide/comProfile";
-import ComProfileEdit from "./pages/CompanySide/comProfileEdit";
+import ComProfile from "./modules/Profile/pages/comProfile";
 
 import JobHome from "./pages/JobSeekerSide/jobHome";
 import JobApplicants from "./pages/JobSeekerSide/jobApplicants";
-import JobProfile from "./pages/JobSeekerSide/jobProfile";
-import JobProfileEdit from "./pages/JobSeekerSide/jobProfileEdit";
+import JobProfile from "./modules/Profile/pages/jobProfile";
 
 export default function App() {
   const { profile } = useProfile();
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-[#F8FAF9]">
+      <div className="flex min-h-screen bg-[#F8FAF9]">
         
         {profile && profile.role === "company" && <SidebarCom />}
         {profile && profile.role === "user" && <SidebarJob />}
 
-        <div className={`transition-all ${profile ? "pl-[260px]" : "pl-0"}`}>
+        <main className="flex-1 overflow-y-auto">
           <Routes>
             
             <Route 
@@ -63,17 +61,15 @@ export default function App() {
             <Route path="/comMyPostEdit/:id" element={<ComMyPostEdit />} /> 
             <Route path="/comApplicants" element={<ComApplicants />} />
             <Route path="/comProfile" element={<ComProfile />} />
-            <Route path="/comProfileEdit" element={<ComProfileEdit />} />
 
             <Route path="/jobHome" element={<JobHome />} />
             <Route path="/jobApplicants" element={<JobApplicants />} />
             <Route path="/jobProfile" element={<JobProfile />} />
-            <Route path="/jobProfileEdit" element={<JobProfileEdit />} />
 
             <Route path="*" element={<NotFound />} />
 
           </Routes>
-        </div>
+        </main>
 
       </div>
     </BrowserRouter>
