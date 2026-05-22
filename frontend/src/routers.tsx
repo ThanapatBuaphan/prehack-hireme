@@ -15,14 +15,12 @@ import ComMyPost from "./pages/CompanySide/comMyPost";
 import ComApplicants from "./pages/CompanySide/comApplicants";
 import ComCreatePost from "./pages/CompanySide/comCreatePost";
 import ComMyPostEdit from "./pages/CompanySide/comMyPostEdit";
-import ComProfile from "./pages/CompanySide/comProfile";
-import ComProfileEdit from "./pages/CompanySide/comProfileEdit";
+import ComProfile from "./modules/Profile/pages/comProfile";
 
 //Job seeker
 import JobHome from "./pages/JobSeekerSide/jobHome";
 import JobApplicants from "./pages/JobSeekerSide/jobApplicants";
-import JobProfile from "./pages/JobSeekerSide/jobProfile";
-import JobProfileEdit from "./pages/JobSeekerSide/jobProfileEdit";
+import JobProfile from "./modules/Profile/pages/jobProfile";
 
 
 
@@ -45,13 +43,11 @@ const mainRouter = createBrowserRouter([
       { path: "comApplicants", element: <ComApplicants /> },
       { path: "comMyPostEdit", element: <ComMyPostEdit /> },
       { path: "comProfile", element: <ComProfile /> },
-      { path: "comProfileEdit", element: <ComProfileEdit /> },
       
       // ฝั่ง Job Seeker
       { path: "jobHome", element: <JobHome /> },
       { path: "jobApplicants", element: <JobApplicants /> },
       { path: "jobProfile", element: <JobProfile /> },
-      { path: "jobProfileEdit", element: <JobProfileEdit /> },
       
 
       { path: "*", element: <NotFound/>}
