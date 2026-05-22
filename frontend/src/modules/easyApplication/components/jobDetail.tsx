@@ -5,6 +5,8 @@ type JobDetailProps = {
   job: JobPosting | null;
   compact?: boolean;
   className?: string;
+  isApplying?: boolean;
+  applyError?: string | null;
   onApply?: () => void;
 };
 
@@ -12,6 +14,8 @@ export default function JobDetail({
   job,
   compact = false,
   className = "",
+  isApplying = false,
+  applyError,
   onApply,
 }: JobDetailProps) {
   if (!job) {
@@ -76,15 +80,19 @@ export default function JobDetail({
 
       <button
         type="button"
-        disabled={job.applied}
+        disabled={job.applied || isApplying}
         onClick={onApply}
         className={`${compact ? "mt-7" : "mt-auto"} h-9 w-full rounded-md text-sm font-semibold text-white transition ${job.applied
             ? "cursor-not-allowed bg-[#9c9c9c]"
             : "bg-[#6d35d3] hover:bg-[#5b29bc]"
           }`}
       >
-        {job.applied ? "Applied" : "Apply"}
+        {job.applied ? "Applied" : isApplying ? "Applying..." : "Apply"}
       </button>
+
+      {applyError && (
+        <p className="pt-2 text-sm text-[#b42318]">{applyError}</p>
+      )}
     </section>
   );
 }

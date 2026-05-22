@@ -2,7 +2,9 @@ import Location from "../../../icons/Location.png";
 
 export type JobPosting = {
   id: number;
+  companyId: number;
   company: string;
+  companyLogo?: string | null;
   title: string;
   location: string;
   employmentType: string;
@@ -22,6 +24,16 @@ type JobCardProps = {
 };
 
 function CompanyMark({ job }: { job: JobPosting }) {
+  if (job.companyLogo) {
+    return (
+      <img
+        src={job.companyLogo}
+        alt={`${job.company} logo`}
+        className="h-[62px] w-[62px] shrink-0 rounded-md object-cover"
+      />
+    );
+  }
+
   return (
     <span
       aria-hidden="true"
@@ -37,11 +49,10 @@ export default function JobCard({ job, isSelected, onSelect }: JobCardProps) {
     <button
       type="button"
       onClick={onSelect}
-      className={`flex w-full min-w-0 gap-4 rounded-lg border bg-white p-3 text-left transition sm:p-4 ${
-        isSelected
+      className={`flex w-full min-w-0 gap-4 rounded-lg border bg-white p-3 text-left transition sm:p-4 ${isSelected
           ? "border-[#9a70eb] shadow-[0_5px_16px_rgba(82,54,135,0.16)] ring-1 ring-[#eadfff]"
           : "border-[#d5d5d5] hover:border-[#b89ae9] hover:shadow-[0_4px_12px_rgba(15,23,42,0.1)]"
-      }`}
+        }`}
     >
       <CompanyMark job={job} />
 

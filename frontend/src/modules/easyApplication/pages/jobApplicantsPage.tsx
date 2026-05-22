@@ -1,83 +1,128 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ApplicationCard, {
   type JobApplication,
 } from "../components/applicationCard";
 import { useDrawer } from "../../../context/DrawerContext";
+import { useProfile } from "../../../context/ProfileContext";
+import {
+  deleteJobApplication,
+  getEasyApplicationErrorMessage,
+  getJobSeekerApplications,
+  type IncomingApplication,
+} from "../apis/easyApplication.api";
 
-const mockApplications: JobApplication[] = [
-  {
-    id: 1,
-    jobTitle: "Frontend Developer",
-    company: "TechCorp",
-    status: "Pending",
-    postedDate: "20 May 2026",
-  },
-  {
-    id: 2,
-    jobTitle: "Backend Developer",
-    company: "Bigbluk Co.",
-    status: "Accepted",
-    postedDate: "17 May 2026",
-  },
-  {
-    id: 3,
-    jobTitle: "Data Analysis",
-    company: "DataLink",
-    status: "Rejected",
-    postedDate: "15 May 2026",
-  },
-  {
-    id: 4,
-    jobTitle: "Full Stack Developer",
-    company: "BioTech",
-    status: "Accepted",
-    postedDate: "10 May 2026",
-  },
-  {
-    id: 5,
-    jobTitle: "UX/UI Design",
-    company: "Eletric Arts Co. LTD",
-    status: "Pending",
-    postedDate: "9 May 2026",
-  },
-  {
-    id: 6,
-    jobTitle: "Mobile Developer",
-    company: "AppWorks",
-    status: "Pending",
-    postedDate: "7 May 2026",
-  },
-  {
-    id: 7,
-    jobTitle: "QA Tester",
-    company: "BugLess",
-    status: "Accepted",
-    postedDate: "5 May 2026",
-  },
-  {
-    id: 8,
-    jobTitle: "UI Designer",
-    company: "CreativeHub",
-    status: "Rejected",
-    postedDate: "3 May 2026",
-  },
-  {
-    id: 9,
-    jobTitle: "DevOps Intern",
-    company: "CloudNine",
-    status: "Pending",
-    postedDate: "1 May 2026",
-  },
-];
+function formatApplicationStatus(
+  status: IncomingApplication["status"],
+): JobApplication["status"] {
+  const normalizedStatus = status.toLowerCase();
+
+  if (normalizedStatus === "accepted") {
+    return "Accepted";
+  }
+
+  if (normalizedStatus === "rejected") {
+    return "Rejected";
+  }
+
+  return "Pending";
+}
+
+function formatPostedDate(date: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
+function formatApplication(application: IncomingApplication): JobApplication {
+  return {
+    id: application.id,
+    jobTitle: application.post?.jobtitle ?? "Job post unavailable",
+    company: application.companyhire?.companyName ?? "Company unavailable",
+    status: formatApplicationStatus(application.status),
+    postedDate: formatPostedDate(
+      application.post?.createdAt ?? application.createdAt,
+    ),
+  };
+}
 
 export default function JobApplicantsPage() {
   const { setOpen } = useDrawer();
-  const [applications, setApplications] = useState(mockApplications);
+  const { profile } = useProfile();
+  const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingApplicationId, setDeletingApplicationId] = useState<number | null>(
+    null,
+  );
 
-  function deleteApplication(applicationId: number) {
-    setApplications((currentApplications) =>
-      currentApplications.filter((application) => application.id !== applicationId),
-    );
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadApplications() {
+      if (!profile?.userId) {
+        setIsLoading(false);
+        setLoadError("A job seeker profile is required to load applications.");
+        return;
+      }
+
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        const incomingApplications = await getJobSeekerApplications(profile.userId);
+
+        if (isMounted) {
+          setApplications(incomingApplications.map(formatApplication));
+        }
+      } catch (error) {
+        console.error("Failed to load job seeker applications:", error);
+
+        if (isMounted) {
+          setLoadError(
+            getEasyApplicationErrorMessage(
+              error,
+              "Failed to load applications.",
+            ),
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadApplications();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [profile?.userId]);
+
+  async function handleDeleteApplication(applicationId: number) {
+    setDeleteError(null);
+    setDeletingApplicationId(applicationId);
+
+    try {
+      await deleteJobApplication(applicationId);
+
+      setApplications((currentApplications) =>
+        currentApplications.filter((application) => application.id !== applicationId),
+      );
+    } catch (error) {
+      console.error("Failed to delete job seeker application:", error);
+      setDeleteError(
+        getEasyApplicationErrorMessage(
+          error,
+          "Failed to delete application.",
+        ),
+      );
+    } finally {
+      setDeletingApplicationId(null);
+    }
   }
 
   return (
@@ -110,15 +155,34 @@ export default function JobApplicantsPage() {
         </div>
 
         <div className="min-h-0 flex-1 min-w-0 space-y-3 overflow-y-auto pb-6 md:space-y-4">
+          {isLoading && (
+            <p className="border border-[#ececec] bg-[#fbfbfb] px-5 py-8 text-sm text-[#777777]">
+              Loading applications...
+            </p>
+          )}
+
+          {loadError && (
+            <p className="border border-[#f3c5c5] bg-[#fff7f7] px-5 py-8 text-sm text-[#b42318]">
+              {loadError}
+            </p>
+          )}
+
+          {deleteError && (
+            <p className="border border-[#f3c5c5] bg-[#fff7f7] px-5 py-4 text-sm text-[#b42318]">
+              {deleteError}
+            </p>
+          )}
+
           {applications.map((application) => (
             <ApplicationCard
               key={application.id}
               application={application}
-              onDelete={() => deleteApplication(application.id)}
+              isDeleting={deletingApplicationId === application.id}
+              onDelete={() => void handleDeleteApplication(application.id)}
             />
           ))}
 
-          {applications.length === 0 && (
+          {!isLoading && !loadError && applications.length === 0 && (
             <p className="border border-[#ececec] bg-[#fbfbfb] px-5 py-8 text-sm text-[#777777]">
               No applications to show.
             </p>

@@ -10,6 +10,7 @@ export type JobApplication = {
 
 type ApplicationCardProps = {
   application: JobApplication;
+  isDeleting?: boolean;
   onDelete: () => void;
 };
 
@@ -27,6 +28,7 @@ function getStatusClassName(status: JobApplication["status"]) {
 
 export default function ApplicationCard({
   application,
+  isDeleting = false,
   onDelete,
 }: ApplicationCardProps) {
   return (
@@ -45,8 +47,9 @@ export default function ApplicationCard({
         <button
           type="button"
           onClick={onDelete}
+          disabled={isDeleting}
           aria-label={`Delete ${application.jobTitle} application`}
-          className="flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-red-50"
+          className="flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <img src={Bin} alt="" className="h-5 w-5 object-contain" />
         </button>
@@ -65,8 +68,9 @@ export default function ApplicationCard({
           <button
             type="button"
             onClick={onDelete}
+            disabled={isDeleting}
             aria-label={`Delete ${application.jobTitle} application`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition hover:bg-red-50"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <img src={Bin} alt="" className="h-5 w-5 object-contain" />
           </button>

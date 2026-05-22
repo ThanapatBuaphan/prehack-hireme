@@ -1,115 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import JobCard, { type JobPosting } from "../components/jobCard";
 import JobDetail from "../components/jobDetail";
 import { useDrawer } from "../../../context/DrawerContext";
+import { useProfile } from "../../../context/ProfileContext";
+import {
+  createJobApplication,
+  getEasyApplicationErrorMessage,
+  getAvailableJobPosts,
+  getJobSeekerApplications,
+} from "../apis/easyApplication.api";
 // import SearchBar from "../components/searchBar";
-
-const initialJobs: JobPosting[] = [
-  {
-    id: 1,
-    company: "A Co.,Ltd.",
-    title: "Manager",
-    location: "Bangkok, Thailand",
-    employmentType: "Full Time",
-    postedLabel: "2 days ago",
-    description: "Lead product delivery with a practical, hands-on team.",
-    requirements: ["team leadership", "roadmap planning", "clear communication"],
-    salary: "30000 - 45000 THB/Month",
-    accentClassName: "bg-[#eadf2d]",
-    keywordText: "operations product planning people",
-  },
-  {
-    id: 2,
-    company: "B Co.,Ltd.",
-    title: "Software Engineer",
-    location: "Bangkok, Thailand",
-    employmentType: "Part Time",
-    postedLabel: "3 days ago",
-    description: "Build simple job seeker features with React and TypeScript.",
-    requirements: ["React", "TypeScript", "REST API basics"],
-    salary: "18000 - 26000 THB/Month",
-    accentClassName: "bg-[#4f874f]",
-    keywordText: "frontend web react typescript javascript",
-  },
-  {
-    id: 3,
-    company: "C Co.,Ltd.",
-    title: "CEO Assistant",
-    location: "Bangkok, Thailand",
-    employmentType: "Full Time",
-    postedLabel: "4 days ago",
-    description: "Support leadership with research, schedules, and reporting.",
-    requirements: ["research", "documents", "organization"],
-    salary: "24000 - 32000 THB/Month",
-    accentClassName: "bg-[#d96565]",
-    keywordText: "assistant business admin reports",
-  },
-  {
-    id: 4,
-    company: "DataLink",
-    title: "Data Analyst",
-    location: "Nonthaburi, Thailand",
-    employmentType: "Hybrid",
-    postedLabel: "5 days ago",
-    description: "Turn hiring and business data into clear dashboards.",
-    requirements: ["SQL", "spreadsheets", "dashboard storytelling"],
-    salary: "26000 - 38000 THB/Month",
-    accentClassName: "bg-[#467bb8]",
-    keywordText: "analytics sql dashboards data reporting",
-  },
-  {
-    id: 5,
-    company: "AppWorks",
-    title: "Mobile Developer",
-    location: "Chiang Mai, Thailand",
-    employmentType: "Remote",
-    postedLabel: "6 days ago",
-    description: "Build cross-platform mobile applications.",
-    requirements: ["Flutter", "Firebase", "UI Design"],
-    salary: "25000 - 40000 THB/Month",
-    accentClassName: "bg-[#9b59b6]",
-    keywordText: "mobile flutter firebase ui",
-  },
-  {
-    id: 6,
-    company: "BugLess",
-    title: "QA Tester",
-    location: "Pathum Thani, Thailand",
-    employmentType: "Hybrid",
-    postedLabel: "1 week ago",
-    description: "Test application flows and report bugs.",
-    requirements: ["Testing", "Bug Reports", "Attention to Detail"],
-    salary: "18000 - 26000 THB/Month",
-    accentClassName: "bg-[#16a085]",
-    keywordText: "qa testing bugs reports",
-  },
-  {
-    id: 7,
-    company: "CloudSync",
-    title: "DevOps Engineer",
-    location: "Bangkok, Thailand",
-    employmentType: "Full Time",
-    postedLabel: "1 week ago",
-    description: "Manage CI/CD and cloud deployment pipelines.",
-    requirements: ["Docker", "AWS", "Linux"],
-    salary: "35000 - 55000 THB/Month",
-    accentClassName: "bg-[#34495e]",
-    keywordText: "devops docker aws cloud",
-  },
-  {
-    id: 8,
-    company: "Pixel Studio",
-    title: "UI Designer",
-    location: "Khon Kaen, Thailand",
-    employmentType: "Part Time",
-    postedLabel: "8 days ago",
-    description: "Design modern interfaces for recruitment apps.",
-    requirements: ["Figma", "Typography", "Wireframes"],
-    salary: "20000 - 30000 THB/Month",
-    accentClassName: "bg-[#e67e22]",
-    keywordText: "ui ux figma design",
-  },
-];
 
 function matchesSearch(job: JobPosting, query: string) {
   const searchText = [
@@ -129,12 +29,69 @@ function matchesSearch(job: JobPosting, query: string) {
 
 export default function JobHomePage() {
   const { setOpen } = useDrawer();
+  const { profile } = useProfile();
   const searchValue = "";
-  const [jobs, setJobs] = useState(initialJobs);
+  const [jobs, setJobs] = useState<JobPosting[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [applyingJobId, setApplyingJobId] = useState<number | null>(null);
+  const [applyError, setApplyError] = useState<string | null>(null);
 
-  const [selectedJobId, setSelectedJobId] = useState<number | null>(
-    initialJobs[0]?.id ?? null
-  );
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadJobs() {
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        const [availableJobs, existingApplications] = await Promise.all([
+          getAvailableJobPosts(),
+          profile?.userId
+            ? getJobSeekerApplications(profile.userId)
+            : Promise.resolve([]),
+        ]);
+        const appliedPostIds = new Set(
+          existingApplications
+            .map((application) => application.postId)
+            .filter((postId): postId is number => postId !== null),
+        );
+
+        if (isMounted) {
+          setJobs(
+            availableJobs.map((job) => ({
+              ...job,
+              applied: appliedPostIds.has(job.id),
+            })),
+          );
+          setSelectedJobId(availableJobs[0]?.id ?? null);
+        }
+      } catch (error) {
+        console.error("Failed to load available job posts:", error);
+
+        if (isMounted) {
+          setJobs([]);
+          setSelectedJobId(null);
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : "Failed to load available job posts.",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadJobs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [profile?.userId]);
 
   const visibleJobs = useMemo(
     () => jobs.filter((job) => matchesSearch(job, searchValue)),
@@ -144,14 +101,38 @@ export default function JobHomePage() {
   const selectedJob =
     visibleJobs.find((job) => job.id === selectedJobId) ?? null;
 
-  function applyJob(jobId: number) {
-    setJobs((currentJobs) =>
-      currentJobs.map((job) =>
-        job.id === jobId
-          ? { ...job, applied: true }
-          : job
-      )
-    );
+  async function applyJob(job: JobPosting) {
+    if (!profile?.userId) {
+      setApplyError("A job seeker profile is required to apply.");
+      return;
+    }
+
+    setApplyingJobId(job.id);
+    setApplyError(null);
+
+    try {
+      await createJobApplication({
+        userId: profile.userId,
+        companyId: job.companyId,
+        postId: job.id,
+        message: "I am interested in this position.",
+      });
+
+      setJobs((currentJobs) =>
+        currentJobs.map((currentJob) =>
+          currentJob.id === job.id
+            ? { ...currentJob, applied: true }
+            : currentJob,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to apply for job:", error);
+      setApplyError(
+        getEasyApplicationErrorMessage(error, "Failed to apply for this job."),
+      );
+    } finally {
+      setApplyingJobId(null);
+    }
   }
 
   return (
@@ -182,6 +163,18 @@ export default function JobHomePage() {
             </h1>
 
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pb-6 pr-1">
+              {isLoading && (
+                <p className="rounded-md border border-[#e6e6e6] bg-[#fbfbfb] px-4 py-6 text-sm text-[#777777]">
+                  Loading job posts...
+                </p>
+              )}
+
+              {loadError && (
+                <p className="rounded-md border border-[#f3c5c5] bg-[#fff7f7] px-4 py-6 text-sm text-[#b42318]">
+                  {loadError}
+                </p>
+              )}
+
               {visibleJobs.map((job) => {
                 const isSelected = selectedJob?.id === job.id;
 
@@ -202,14 +195,16 @@ export default function JobHomePage() {
                         job={job}
                         compact
                         className="lg:hidden"
-                        onApply={() => applyJob(job.id)}
+                        isApplying={applyingJobId === job.id}
+                        applyError={isSelected ? applyError : null}
+                        onApply={() => applyJob(job)}
                       />
                     )}
                   </div>
                 );
               })}
 
-              {visibleJobs.length === 0 && (
+              {!isLoading && !loadError && visibleJobs.length === 0 && (
                 <p className="rounded-md border border-[#e6e6e6] bg-[#fbfbfb] px-4 py-6 text-sm text-[#777777]">
                   No jobs match that search.
                 </p>
@@ -220,9 +215,11 @@ export default function JobHomePage() {
           <JobDetail
             job={selectedJob}
             className="hidden min-h-0 lg:flex"
+            isApplying={applyingJobId === selectedJob?.id}
+            applyError={applyError}
             onApply={() => {
               if (selectedJob) {
-                applyJob(selectedJob.id);
+                void applyJob(selectedJob);
               }
             }}
           />

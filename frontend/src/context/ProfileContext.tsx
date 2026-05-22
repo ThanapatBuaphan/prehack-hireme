@@ -48,24 +48,27 @@ interface ProfileContextType {
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
+// TODO: remove this local development profile when auth/login is the source of truth.
+// User id 3 exists in the local development database as a job seeker.
 const DEVELOPMENT_FALLBACK_JOB_PROFILE: UserProfile = {
   accountId: 1,
-  email: "john@example.com",
+  userId: 3,
   role: "user",
-  firstName: "John",
-  lastName: "Doe",
+  email: "Alya@example.com",
+  firstName: "Alya",
+  lastName: "Chan",
 };
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = useState<UserProfile | null>(() => {
     const stored = authService.getStoredUser();
 
-    if (stored) {
-      return stored;
-    }
-
     if (import.meta.env.DEV && !authService.isLoggedIn()) {
       return DEVELOPMENT_FALLBACK_JOB_PROFILE;
+    }
+
+    if (stored) {
+      return stored;
     }
 
     return null;
@@ -74,20 +77,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function fetchProfile() {
-    if (!authService.isLoggedIn()) { 
+    if (!authService.isLoggedIn()) {
       if (import.meta.env.DEV) {
         setProfileState(DEVELOPMENT_FALLBACK_JOB_PROFILE);
         setLoading(false);
         return;
       }
 
-      setLoading(false); 
-      setProfileState(null); 
-      return; 
+      setLoading(false);
+      setProfileState(null);
+      return;
     }
     setLoading(true);
     try {
-      const user = await userService.getProfile(); 
+      const user = await userService.getProfile();
       setProfileState(user);
       localStorage.setItem("user", JSON.stringify(user));
     } catch (error) {
@@ -103,8 +106,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  useEffect(() => { 
-    fetchProfile(); 
+  useEffect(() => {
+    fetchProfile();
   }, []);
 
   function setProfile(p: UserProfile) {
@@ -113,22 +116,22 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    authService.logout(); 
+    authService.logout();
     setProfileState(null);
     setPosts([]);
     localStorage.removeItem("user");
   }
 
   return (
-    <ProfileContext.Provider 
-      value={{ 
-        profile, 
-        setProfile, 
-        posts, 
-        setPosts, 
-        loading, 
+    <ProfileContext.Provider
+      value={{
+        profile,
+        setProfile,
+        posts,
+        setPosts,
+        loading,
         refetchProfile: fetchProfile,
-        logout 
+        logout
       }}
     >
       {children}
