@@ -48,6 +48,7 @@ interface ProfileContextType {
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
+// TODO: remove this DEV-only fallback when login/auth is complete enough for local testing.
 const DEVELOPMENT_FALLBACK_JOB_PROFILE: UserProfile = {
   accountId: 1,
   userId: 3,
@@ -57,6 +58,7 @@ const DEVELOPMENT_FALLBACK_JOB_PROFILE: UserProfile = {
   lastName: "Chan",
 };
 
+// TODO: remove this DEV-only fallback when login/auth is complete enough for local testing.
 const DEVELOPMENT_FALLBACK_COMPANY_PROFILE: UserProfile = {
   accountId: 1,
   companyId: 2,

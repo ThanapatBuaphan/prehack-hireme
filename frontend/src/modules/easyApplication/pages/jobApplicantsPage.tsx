@@ -4,6 +4,7 @@ import ApplicationCard, {
 } from "../components/applicationCard";
 import { useDrawer } from "../../../context/DrawerContext";
 import { useProfile } from "../../../context/ProfileContext";
+import MenuBar from "../../../icons/Menu-bar.png";
 import {
   deleteJobApplication,
   getEasyApplicationErrorMessage,
@@ -132,9 +133,10 @@ export default function JobApplicantsPage() {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-md text-2xl"
+            aria-label="Open navigation menu"
+            className="flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-[#f8f8f8]"
           >
-            ☰
+            <img src={MenuBar} alt="" className="h-7 w-7 object-contain" />
           </button>
 
           <h1 className="font-serif text-base font-semibold text-black">

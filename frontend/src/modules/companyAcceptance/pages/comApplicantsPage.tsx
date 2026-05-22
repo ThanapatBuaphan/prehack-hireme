@@ -78,9 +78,11 @@ export default function ComApplicants() {
         setLoading(true);
         setError(null);
 
-        const companyId = profile?.companyId ?? 2;
+        if (!profile?.companyId) {
+          throw new Error("A company profile is required to load applicants.");
+        }
 
-        const incomingApplicants = await getIncomingApplicants(companyId);
+        const incomingApplicants = await getIncomingApplicants(profile.companyId);
 
         if (!Array.isArray(incomingApplicants)) {
           throw new Error("getIncomingApplicants did not return an array.");
