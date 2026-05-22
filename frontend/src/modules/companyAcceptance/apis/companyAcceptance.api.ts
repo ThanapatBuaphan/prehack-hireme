@@ -30,7 +30,7 @@ export async function getIncomingApplicants(companyId: number) {
   try {
     const response = await api.get<{
       data: IncomingApplicantApply[];
-    }>(`/applies/company/${companyId}`);
+    }>(`/company-acceptance/company/${companyId}`);
 
     if (!Array.isArray(response.data?.data)) {
       throw new Error("Applicants response.data.data is not an array.");
@@ -46,5 +46,5 @@ export async function updateApplyStatus(
   applyId: number,
   status: ApplyStatusValue,
 ) {
-  return api.patch(`/applies/${applyId}/status`, { status });
+  return api.patch(`/company-acceptance/${applyId}/status`, { status });
 }

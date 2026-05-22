@@ -16,7 +16,7 @@ import ComHome from "./pages/CompanySide/comHome";
 import ComCreatePost from "./pages/CompanySide/comCreatePost";
 import ComMyPost from "./pages/CompanySide/comMyPost";
 import ComMyPostEdit from "./pages/CompanySide/comMyPostEdit";
-import ComApplicants from "./pages/CompanySide/comApplicants";
+import ComApplicants from "./modules/companyAcceptance/pages/comApplicantsPage";
 import ComProfile from "./modules/Profile/pages/comProfile";
 
 import JobHome from "./pages/JobSeekerSide/jobHome";

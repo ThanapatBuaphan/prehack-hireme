@@ -49,22 +49,42 @@ interface ProfileContextType {
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
+  const DEVELOPMENT_FALLBACK_COMPANY_PROFILE: UserProfile = {
+    accountId: 1,
+    companyId: 1,
+    role: "company",
+    email: "pure@gmail.com",
+    companyName: "Pure",
+  };
+
   const [profile, setProfileState] = useState<UserProfile | null>(() => {
     const stored = authService.getStoredUser();
-    return stored ?? null;
+
+    if (stored) return stored;
+
+    if (import.meta.env.DEV) {
+      return DEVELOPMENT_FALLBACK_COMPANY_PROFILE;
+    }
+
+    return null;
   });
   const [posts, setPosts] = useState<JobPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function fetchProfile() {
-    if (!authService.isLoggedIn()) { 
-      setLoading(false); 
-      setProfileState(null); 
-      return; 
+    if (!authService.isLoggedIn()) {
+      if (import.meta.env.DEV) {
+        setProfileState(DEVELOPMENT_FALLBACK_COMPANY_PROFILE);
+      } else {
+        setProfileState(null);
+      }
+
+      setLoading(false);
+      return;
     }
     setLoading(true);
     try {
-      const user = await userService.getProfile(); 
+      const user = await userService.getProfile();
       setProfileState(user);
       localStorage.setItem("user", JSON.stringify(user));
     } catch (error) {
@@ -75,8 +95,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  useEffect(() => { 
-    fetchProfile(); 
+  useEffect(() => {
+    fetchProfile();
   }, []);
 
   function setProfile(p: UserProfile) {
@@ -85,22 +105,22 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    authService.logout(); 
+    authService.logout();
     setProfileState(null);
     setPosts([]);
     localStorage.removeItem("user");
   }
 
   return (
-    <ProfileContext.Provider 
-      value={{ 
-        profile, 
-        setProfile, 
-        posts, 
-        setPosts, 
-        loading, 
+    <ProfileContext.Provider
+      value={{
+        profile,
+        setProfile,
+        posts,
+        setPosts,
+        loading,
         refetchProfile: fetchProfile,
-        logout 
+        logout
       }}
     >
       {children}
