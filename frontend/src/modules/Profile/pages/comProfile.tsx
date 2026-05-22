@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { useProfile } from "../../../context/ProfileContext";
 import { userService } from "../../../services/user.service";
-import api from "../../../services/api";
+import api, { publicApi } from "../../../services/api";
 import ProfileBanner from "../components/ProfileBanner";
 import PageHeader from "../../../components/PageHeader";
 import type { CompanyMember, CompanyPost } from "../types/profile.types";
 
 export default function ComProfile() {
-  const { profile, setProfile, loading } = useProfile();
+  const { id } = useParams<{ id: string }>();
+  const { profile: myProfile, setProfile, loading: ctxLoading } = useProfile();
 
+  const isOwner = id === "me" || String(myProfile?.companyId) === id;
+
+  const [data, setData] = useState<any>(null);
   const [members, setMembers] = useState<CompanyMember[]>([]);
-  const [posts, setPosts] = useState<CompanyPost[]>([]);
   const [fullLoading, setFullLoading] = useState(true);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -26,10 +30,11 @@ export default function ComProfile() {
   const loadFull = async () => {
     setFullLoading(true);
     try {
-      const { data } = await api.get("/api/company/profile");
-      const c = data.company;
+      const url = isOwner ? "/api/company/profile" : `/api/company/profile/${id}`;
+      const { data: res } = await (isOwner ? api : publicApi).get(url);
+      const c = res.company;
+      setData(c);
       setMembers(c.members ?? []);
-      setPosts(c.posts ?? []);
       const parts = [c.location?.address, c.location?.city, c.location?.postalCode, c.location?.country].filter(Boolean);
       setLocationText(parts.join(", "));
       setForm({
@@ -47,7 +52,7 @@ export default function ComProfile() {
     }
   };
 
-  useEffect(() => { loadFull(); }, []);
+  useEffect(() => { if (!ctxLoading) loadFull(); }, [id, ctxLoading]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -59,15 +64,13 @@ export default function ComProfile() {
         description: form.description,
         ...(logoFile && { logo: logoFile }),
       });
-      setProfile({ ...profile!, ...updated });
-
+      setProfile({ ...myProfile!, ...updated });
       if (form.address || form.city || form.country) {
         await userService.upsertCompanyLocation({
           address: form.address, city: form.city,
           country: form.country, postalCode: form.postalCode,
         });
       }
-
       await loadFull();
       setIsEditing(false);
       setLogoFile(null);
@@ -84,33 +87,37 @@ export default function ComProfile() {
     loadFull();
   };
 
-  if (loading || fullLoading) return (
+  if (ctxLoading || fullLoading) return (
     <div className="flex-1 flex items-center justify-center text-gray-400">Loading...</div>
   );
-  if (!profile) return null;
+  if (!data) return (
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4 text-gray-400">
+      <svg className="w-16 h-16" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+      <p className="text-xl font-bold text-gray-600">Profile not found</p>
+      <p className="text-sm">The profile you are looking for does not exist.</p>
+    </div>
+  );
 
-  const email = profile.email ?? "";
+  const email = data.email ?? "";
   const memberCount = members.length;
 
   return (
     <div className="flex flex-col h-full min-h-screen bg-white">
-      <PageHeader showBack />
-
+      <PageHeader showBack={!isOwner} />
       <ProfileBanner
-        avatarUrl={logoPreview ?? profile.logo}
-        isEditing={isEditing}
+        avatarUrl={logoPreview ?? data.logo}
+        isEditing={isEditing && isOwner}
         onAvatarChange={(f) => { setLogoFile(f); setLogoPreview(URL.createObjectURL(f)); }}
       />
 
       <div className="flex-1 px-4 sm:px-8 pb-6 flex flex-col gap-4 pt-10">
-
-        {isEditing ? (
+        {isEditing && isOwner ? (
           <input value={form.companyName}
             onChange={(e) => setForm((f) => ({ ...f, companyName: e.target.value }))}
             placeholder="Company Name"
             className="border border-gray-300 rounded-full px-3 py-1.5 text-lg font-bold outline-none focus:border-[#515DB6] w-full" />
         ) : (
-          <h2 className="text-xl font-bold text-gray-800">{profile.companyName}</h2>
+          <h2 className="text-xl font-bold text-gray-800">{data.companyName}</h2>
         )}
 
         <ul className="flex flex-col gap-2 text-sm">
@@ -124,7 +131,7 @@ export default function ComProfile() {
           </li>
           <li className="flex items-center gap-2">
             <span className="font-semibold text-gray-500 min-w-[80px]">Phone:</span>
-            {isEditing ? (
+            {isEditing && isOwner ? (
               <input value={form.phoneNumber} onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
                 placeholder="Phone number"
                 className="border border-gray-300 rounded-full px-3 py-1 text-sm flex-1 outline-none focus:border-[#515DB6]" />
@@ -134,7 +141,7 @@ export default function ComProfile() {
           </li>
           <li className="flex items-center gap-2">
             <span className="font-semibold text-gray-500 min-w-[80px]">Type:</span>
-            {isEditing ? (
+            {isEditing && isOwner ? (
               <input value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
                 placeholder="Company type"
                 className="border border-gray-300 rounded-full px-3 py-1 text-sm flex-1 outline-none focus:border-[#515DB6]" />
@@ -142,7 +149,7 @@ export default function ComProfile() {
               <span className="text-gray-700">{form.type || "—"}</span>
             )}
           </li>
-          {isEditing ? (
+          {isEditing && isOwner ? (
             <>
               {[
                 { label: "Address", key: "address", placeholder: "Street address" },
@@ -169,19 +176,19 @@ export default function ComProfile() {
 
         <div className="flex flex-col gap-1">
           <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Description</span>
-          {isEditing ? (
+          {isEditing && isOwner ? (
             <textarea value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               placeholder="Company description..." rows={5}
               className="border border-gray-300 rounded-2xl px-4 py-2 text-sm outline-none focus:border-[#515DB6] resize-none w-full" />
           ) : (
             <div className="border border-gray-200 rounded-2xl px-4 py-3 min-h-[80px] text-sm text-gray-600">
-              {profile.description || <span className="text-gray-400 italic">No description</span>}
+              {data.description || <span className="text-gray-400 italic">No description</span>}
             </div>
           )}
         </div>
 
-        {!isEditing && memberCount > 0 && (
+        {memberCount > 0 && (
           <div className="flex flex-col gap-2">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Team ({memberCount})</span>
             <div className="flex -space-x-2">
@@ -202,21 +209,23 @@ export default function ComProfile() {
           </div>
         )}
 
-        <div className="flex justify-end gap-2 pt-2">
-          {isEditing ? (
-            <>
-              <button onClick={handleCancel}
-                className="px-5 py-2 rounded-full border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-              <button onClick={handleSave} disabled={saving}
-                className="px-5 py-2 rounded-full bg-[#515DB6] text-white text-sm hover:bg-[#3D3B8E] disabled:opacity-50">
-                {saving ? "Saving..." : "Save"}
-              </button>
-            </>
-          ) : (
-            <button onClick={() => setIsEditing(true)}
-              className="px-5 py-2 rounded-full border border-[#515DB6] text-[#515DB6] text-sm hover:bg-[#515DB6]/5">Edit</button>
-          )}
-        </div>
+        {isOwner && (
+          <div className="flex justify-end gap-2 pt-2">
+            {isEditing ? (
+              <>
+                <button onClick={handleCancel}
+                  className="px-5 py-2 rounded-full border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+                <button onClick={handleSave} disabled={saving}
+                  className="px-5 py-2 rounded-full bg-[#515DB6] text-white text-sm hover:bg-[#3D3B8E] disabled:opacity-50">
+                  {saving ? "Saving..." : "Save"}
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setIsEditing(true)}
+                className="px-5 py-2 rounded-full border border-[#515DB6] text-[#515DB6] text-sm hover:bg-[#515DB6]/5">Edit</button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
