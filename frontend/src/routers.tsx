@@ -18,8 +18,8 @@ import ComMyPostEdit from "./pages/CompanySide/comMyPostEdit";
 import ComProfile from "./modules/Profile/pages/comProfile";
 
 //Job seeker
-import JobHome from "./pages/JobSeekerSide/jobHome";
-import JobApplicants from "./pages/JobSeekerSide/jobApplicants";
+import JobHome from "./modules/easyApplication/pages/jobHomePage";
+import JobApplicants from "./modules/easyApplication/pages/jobApplicantsPage";
 import JobProfile from "./modules/Profile/pages/jobProfile";
 
 

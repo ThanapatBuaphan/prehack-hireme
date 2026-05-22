@@ -47,7 +47,7 @@ export default function SidebarJobSeeker() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-[260px] bg-white shadow-[4px_0_10px_rgba(0,0,0,0.03)] flex-col py-12 px-8 sticky top-0 h-screen">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden h-screen w-[260px] flex-col bg-white px-8 py-12 shadow-[4px_0_10px_rgba(0,0,0,0.03)] md:flex">
         <NavItems />
       </aside>
 
