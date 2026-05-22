@@ -1,5 +1,5 @@
 import { Router } from "express";
-import applyRouter from "./modules/example/routers/apply.router";
+import applyRouter from "./modules/easyApplication/routers/easyApplication.router";
 
 const mainRouter = Router();
 

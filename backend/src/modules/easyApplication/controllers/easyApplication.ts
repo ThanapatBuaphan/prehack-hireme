@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createApply, getIncomingApplications } from "../models/apply.model";
+import { createApply, getIncomingApplications } from "../models/easyApplication.model";
 
 export const createApplyController = async (req: Request, res: Response) => {
   try {

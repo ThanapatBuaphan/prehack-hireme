@@ -19,8 +19,8 @@ import ComProfile from "./pages/CompanySide/comProfile";
 import ComProfileEdit from "./pages/CompanySide/comProfileEdit";
 
 //Job seeker
-import JobHome from "./pages/JobSeekerSide/jobHome";
-import JobApplicants from "./pages/JobSeekerSide/jobApplicants";
+import JobHome from "./modules/easyApplication/pages/jobHomePage";
+import JobApplicants from "./modules/easyApplication/pages/jobApplicantsPage";
 import JobProfile from "./pages/JobSeekerSide/jobProfile";
 import JobProfileEdit from "./pages/JobSeekerSide/jobProfileEdit";
 
