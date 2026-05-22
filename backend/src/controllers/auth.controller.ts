@@ -39,7 +39,7 @@ export async function userRegister(req: Request, res: Response, next: NextFuncti
                 data: { email, password: hashedPassword, role: "user" },
             });
             const user = await tx.user.create({
-                data: { email, firstName, lastName, gender, phoneNumber, accountId: account.id, },
+                data: { firstName, lastName, gender, phoneNumber, accountId: account.id, },
             });
                 return { account, user };
         });

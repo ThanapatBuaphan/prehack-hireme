@@ -61,7 +61,8 @@ export const requireRole = (...roles: Array<"user" | "company">) => {
 
 export const requireOwner = (paramKey: string = "id") => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const resourceId = parseInt(req.params[paramKey]);
+    const raw = req.params[paramKey];
+    const resourceId = parseInt(Array.isArray(raw) ? raw[0] : raw, 10);
     const requesterId = req.user?.profileId;
 
     if (resourceId !== requesterId) {
