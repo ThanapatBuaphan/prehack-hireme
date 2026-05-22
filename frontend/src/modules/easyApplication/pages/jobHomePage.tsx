@@ -1,36 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import JobCard, { type JobPosting } from "../components/jobCard";
 import JobDetail from "../components/jobDetail";
 import { useDrawer } from "../../../context/DrawerContext";
 import { useProfile } from "../../../context/ProfileContext";
+import MenuBar from "../../../icons/Menu-bar.png";
 import {
   createJobApplication,
   getEasyApplicationErrorMessage,
   getAvailableJobPosts,
   getJobSeekerApplications,
 } from "../apis/easyApplication.api";
-// import SearchBar from "../components/searchBar";
-
-function matchesSearch(job: JobPosting, query: string) {
-  const searchText = [
-    job.title,
-    job.company,
-    job.location,
-    job.employmentType,
-    job.description,
-    job.keywordText,
-    ...job.requirements,
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  return searchText.includes(query.trim().toLowerCase());
-}
 
 export default function JobHomePage() {
   const { setOpen } = useDrawer();
   const { profile } = useProfile();
-  const searchValue = "";
+
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,6 +36,7 @@ export default function JobHomePage() {
             ? getJobSeekerApplications(profile.userId)
             : Promise.resolve([]),
         ]);
+
         const appliedPostIds = new Set(
           existingApplications
             .map((application) => application.postId)
@@ -93,13 +78,7 @@ export default function JobHomePage() {
     };
   }, [profile?.userId]);
 
-  const visibleJobs = useMemo(
-    () => jobs.filter((job) => matchesSearch(job, searchValue)),
-    [jobs, searchValue],
-  );
-
-  const selectedJob =
-    visibleJobs.find((job) => job.id === selectedJobId) ?? null;
+  const selectedJob = jobs.find((job) => job.id === selectedJobId) ?? null;
 
   async function applyJob(job: JobPosting) {
     if (!profile?.userId) {
@@ -142,19 +121,16 @@ export default function JobHomePage() {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-md text-2xl"
+            aria-label="Open navigation menu"
+            className="flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-[#f8f8f8]"
           >
-            ☰
+            <img src={MenuBar} alt="" className="h-7 w-7 object-contain" />
           </button>
 
           <h1 className="font-serif text-base font-semibold text-black">
             Job Home
           </h1>
         </div>
-
-        {/* <div className="w-full max-w-[552px]">
-          <SearchBar value={searchValue} onChange={setSearchValue} />
-        </div> */}
 
         <div className="mt-7 grid min-h-0 flex-1 min-w-0 gap-6 lg:grid-cols-[minmax(320px,380px)_minmax(360px,1fr)] lg:gap-10">
           <section className="flex min-h-0 min-w-0 flex-col">
@@ -175,7 +151,7 @@ export default function JobHomePage() {
                 </p>
               )}
 
-              {visibleJobs.map((job) => {
+              {jobs.map((job) => {
                 const isSelected = selectedJob?.id === job.id;
 
                 return (
@@ -185,7 +161,7 @@ export default function JobHomePage() {
                       isSelected={isSelected}
                       onSelect={() =>
                         setSelectedJobId((currentId) =>
-                          currentId === job.id ? null : job.id
+                          currentId === job.id ? null : job.id,
                         )
                       }
                     />
@@ -204,9 +180,9 @@ export default function JobHomePage() {
                 );
               })}
 
-              {!isLoading && !loadError && visibleJobs.length === 0 && (
+              {!isLoading && !loadError && jobs.length === 0 && (
                 <p className="rounded-md border border-[#e6e6e6] bg-[#fbfbfb] px-4 py-6 text-sm text-[#777777]">
-                  No jobs match that search.
+                  No job posts available.
                 </p>
               )}
             </div>
