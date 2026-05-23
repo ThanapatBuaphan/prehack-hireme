@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { registerCompany } from "../services/auth.service";
+import { userService } from "../services/user.service";
 
 export default function CreateAcc3com() {
   const navigate = useNavigate();
@@ -49,6 +50,14 @@ export default function CreateAcc3com() {
         password: prevData.password || "",
         companyName: prevData.companyName || "",
       });
+      if (prevData.address || prevData.city || prevData.country) {
+        await userService.upsertCompanyLocation({
+        address: prevData.address,
+        city: prevData.city,
+        postalCode: prevData.zipCode,
+        country: prevData.country,
+      });
+    }
       navigate("/LoginPage");
     } catch (err: any) {
       const message = err?.response?.data?.error || "Registration failed. Please try again.";

@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { registerUser } from "../services/auth.service";
+import { userService } from "../services/user.service";
 
 interface Education {
   id: number;
@@ -114,6 +115,14 @@ export default function CreateAcc3user() {
         gender: "unspecified",
         phoneNumber: "",
       });
+      if (prevData.address || prevData.city || prevData.country) {
+      await userService.upsertCompanyLocation({
+      address: prevData.address,
+      city: prevData.city,
+      postalCode: prevData.zipCode,
+      country: prevData.country,
+      });
+      }
       navigate("/LoginPage");
     } catch (err: any) {
       const message = err?.response?.data?.error || "Registration failed. Please try again.";
