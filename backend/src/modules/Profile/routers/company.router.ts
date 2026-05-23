@@ -15,7 +15,7 @@ import {
 const router = Router();
 
 router.get("/profile", authenticate, requireRole("company"), getCompanyProfile);
-router.get("/profile/:id", authenticate, getCompanyProfileById);
+router.get("/profile/:id", getCompanyProfileById);
 
 router.patch("/profile", authenticate, requireRole("company"), uploadCompanyProfile, updateCompanyProfile);
 
