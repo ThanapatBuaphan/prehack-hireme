@@ -156,7 +156,9 @@ function formatAvailableJobPost(post: AvailableJobPost): JobPosting {
   };
 }
 
-export async function getAvailableJobPosts(): Promise<JobPosting[]> {
-  const response = await api.get<AvailableJobPostsResponse>("/posts");
-  return response.data.data.map(formatAvailableJobPost);
+export async function getAvailableJobPosts(params?: {
+  q?: string; location?: string; minSalary?: number; maxSalary?: number;
+}): Promise<JobPosting[]> {
+  const response = await api.get("/api/posts", { params });
+  return (response.data.posts ?? []).map(formatAvailableJobPost);
 }

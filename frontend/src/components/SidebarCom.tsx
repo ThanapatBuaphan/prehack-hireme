@@ -11,7 +11,7 @@ import MyProfile from "../icons/My Profile.png";
 import Logout from "../icons/Logout.png";
 
 const staticMenuItems = [
-  { label: "Home", path: "/comHome", icon: Home },
+  { label: "Home", path: "/home", icon: Home },
   { label: "My Posts", path: "/comMyPost", icon: MyPosts },
   { label: "Applicants", path: "/comApplicants", icon: Applicants },
 ];

@@ -26,9 +26,14 @@ export async function userRegister(req: Request, res: Response, next: NextFuncti
             res.status(409).json({ error: "Password is not match" });
             return;
         }
-        const existingAccount = await prisma.account.findUnique({ where: { email } });
-        if (existingAccount) {
+        const existingEmail = await prisma.account.findUnique({ where: { email } });
+        if (existingEmail) {
             res.status(409).json({ error: "Email already in use" });
+            return;
+        }
+        const existingPhoneNumber = await prisma.user.findUnique({ where: { phoneNumber } });
+        if (existingPhoneNumber) {
+            res.status(409).json({ error: "Phone number already in use" });
             return;
         }
         const hashedPassword = await bcrypt.hash(password, 10);

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../services/api";
 import PageHeader from "../../../components/PageHeader";
 import HireMe from "../../../icons/HireMe.png";
+import { useProfile } from "../../../context/ProfileContext";
 
 interface Post {
   id: number;
@@ -25,6 +26,7 @@ const statusStyle = (s: string) => {
 };
 
 export default function ComHome() {
+  const { profile } = useProfile();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
@@ -33,10 +35,10 @@ export default function ComHome() {
   useEffect(() => {
     Promise.all([
       api.get("/api/company/profile"),
-      api.get("/api/company/applicants").catch(() => ({ data: { applies: [] } })),
+      api.get(`/company-acceptance/company/${profile?.companyId}`).catch(() => ({ data: { data: [] } })),
     ]).then(([profileRes, appRes]) => {
       setPosts(profileRes.data.company.posts ?? []);
-      setApplicants(appRes.data.applies ?? []);
+      setApplicants(appRes.data.data ?? []);
     }).finally(() => setLoading(false));
   }, []);
 
