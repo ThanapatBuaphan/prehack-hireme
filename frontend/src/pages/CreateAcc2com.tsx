@@ -9,8 +9,10 @@ export default function CreateAcc2com() {
     email: "",
     password: "",
     confirmPassword: "",
-    country: "",
+    address: "",
     city: "",
+    zipCode: "",
+    country: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -30,8 +32,8 @@ export default function CreateAcc2com() {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       newErrors.email = "Invalid email format.";
     if (!form.password) newErrors.password = "Password is required.";
-    else if (form.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters.";
+    else if (form.password.length < 8)
+      newErrors.password = "Password must be at least 8 characters.";
     if (!form.confirmPassword) newErrors.confirmPassword = "Please confirm your password.";
     else if (form.password !== form.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match.";
@@ -131,7 +133,7 @@ export default function CreateAcc2com() {
                 name="password"
                 value={form.password}
                 onChange={handleChange}
-                placeholder="Min. 6 characters"
+                placeholder="Min. 8 characters"
                 className={`w-full px-4 py-3 pr-11 rounded-xl border text-sm outline-none transition-all
                   ${errors.password
                     ? "border-red-400 bg-red-50 focus:ring-2 focus:ring-red-200"
@@ -199,8 +201,47 @@ export default function CreateAcc2com() {
             <p className="text-sm font-semibold text-gray-700 mb-3">
               Location <span className="text-gray-400 font-normal">(Optional)</span>
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
+            <div className="flex flex-col gap-3">
+              {/* Address */}
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Address</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="e.g. 123 Sukhumvit Rd."
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-[#0455E2] focus:ring-2 focus:ring-blue-100 transition-all"
+                />
+              </div>
+              {/* City & Zip Code */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-500 mb-1">City</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={form.city}
+                    onChange={handleChange}
+                    placeholder="e.g. Chiang Mai"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-[#0455E2] focus:ring-2 focus:ring-blue-100 transition-all"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-500 mb-1">Zip Code</label>
+                  <input
+                    type="text"
+                    name="zipCode"
+                    value={form.zipCode}
+                    onChange={handleChange}
+                    placeholder="e.g. 10110"
+                    maxLength={10}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-[#0455E2] focus:ring-2 focus:ring-blue-100 transition-all"
+                  />
+                </div>
+              </div>
+              {/* Country */}
+              <div>
                 <label className="block text-xs text-gray-500 mb-1">Country</label>
                 <input
                   type="text"
@@ -208,17 +249,6 @@ export default function CreateAcc2com() {
                   value={form.country}
                   onChange={handleChange}
                   placeholder="e.g. Thailand"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-[#0455E2] focus:ring-2 focus:ring-blue-100 transition-all"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">City</label>
-                <input
-                  type="text"
-                  name="city"
-                  value={form.city}
-                  onChange={handleChange}
-                  placeholder="e.g. Bangkok"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:border-[#0455E2] focus:ring-2 focus:ring-blue-100 transition-all"
                 />
               </div>

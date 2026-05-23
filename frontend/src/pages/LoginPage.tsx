@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { login } from "../services/auth.service";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -7,6 +8,8 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -23,14 +26,27 @@ export default function LoginPage() {
     return newErrors;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    // TODO: call auth API
-    console.log("Login:", form);
+    setApiError("");
+    setIsLoading(true);
+    try {
+      const data = await login({ email: form.email, password: form.password });
+      if (data.role === "user") {
+        navigate("/jobHome");
+      } else {
+        navigate("/comHome");
+      }
+    } catch (err: any) {
+      const message = err?.response?.data?.error || "Login failed. Please try again.";
+      setApiError(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -104,12 +120,34 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {/* API Error */}
+        {apiError && (
+          <div className="w-full px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm text-center mt-4">
+            {apiError}
+          </div>
+        )}
+
         {/* Login Button */}
         <button
           onClick={handleLogin}
-          className="mt-6 w-full py-3.5 rounded-xl font-semibold text-white text-base bg-[#0455E2] hover:bg-blue-700 active:scale-95 shadow-md shadow-blue-200 transition-all duration-200"
+          disabled={isLoading}
+          className={`mt-4 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white text-base transition-all duration-200
+            ${isLoading
+              ? "bg-blue-300 cursor-not-allowed"
+              : "bg-[#0455E2] hover:bg-blue-700 active:scale-95 shadow-md shadow-blue-200"
+            }`}
         >
-          Login
+          {isLoading ? (
+            <>
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              Logging in...
+            </>
+          ) : (
+            "Login"
+          )}
         </button>
 
         {/* Divider */}

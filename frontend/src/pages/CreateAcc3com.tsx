@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { registerCompany } from "../services/auth.service";
 
 export default function CreateAcc3com() {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ export default function CreateAcc3com() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -49,15 +52,27 @@ export default function CreateAcc3com() {
     return newErrors;
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    // TODO: submit { ...prevData, ...form } to API
-    console.log("Final payload:", { ...prevData, ...form });
-    navigate("/");
+    setApiError("");
+    setIsLoading(true);
+    try {
+      await registerCompany({
+        email: prevData.email || "",
+        password: prevData.password || "",
+        companyName: prevData.companyName || "",
+      });
+      navigate("/");
+    } catch (err: any) {
+      const message = err?.response?.data?.error || "Registration failed. Please try again.";
+      setApiError(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -195,15 +210,39 @@ export default function CreateAcc3com() {
           </div>
         </div>
 
+        {/* API Error */}
+        {apiError && (
+          <div className="mt-4 w-full px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm text-center">
+            {apiError}
+          </div>
+        )}
+
         {/* Create Button */}
         <button
           onClick={handleCreate}
-          className="mt-6 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white text-base bg-[#0455E2] hover:bg-blue-700 active:scale-95 shadow-md shadow-blue-200 transition-all duration-200"
+          disabled={isLoading}
+          className={`mt-4 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white text-base transition-all duration-200
+            ${isLoading
+              ? "bg-blue-300 cursor-not-allowed"
+              : "bg-[#0455E2] hover:bg-blue-700 active:scale-95 shadow-md shadow-blue-200"
+            }`}
         >
-          Create Account
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
+          {isLoading ? (
+            <>
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              Creating...
+            </>
+          ) : (
+            <>
+              Create Account
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </>
+          )}
         </button>
 
         {/* Sign In Link */}

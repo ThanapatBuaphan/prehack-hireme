@@ -262,3 +262,114 @@ export async function removeCompanyMember(req: Request, res: Response, next: Nex
     res.json({ message: "Member removed." });
   } catch (err) { next(err); }
 }
+
+// ==================== POST ====================
+
+// GET /api/company/posts
+export async function getCompanyPosts(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const company = await prisma.company.findUnique({
+      where: { accountId: req.user!.accountId },
+      select: { id: true },
+    });
+    if (!company) { res.status(404).json({ message: "Company not found." }); return; }
+
+    const posts = await prisma.post.findMany({
+      where: { companyId: company.id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true, jobtitle: true, location: true, requirements: true,
+        Salary: true, description: true, createdAt: true, updatedAt: true,
+        _count: { select: { applies: true } },
+      },
+    });
+
+    res.json({ posts });
+  } catch (err) { next(err); }
+}
+
+// POST /api/company/posts
+export async function createPost(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { jobtitle, location, requirements, Salary, description } = req.body;
+
+    if (!jobtitle || !location || !requirements || !Salary) {
+      res.status(400).json({ message: "Missing required fields." }); return;
+    }
+
+    const company = await prisma.company.findUnique({
+      where: { accountId: req.user!.accountId },
+      select: { id: true },
+    });
+    if (!company) { res.status(404).json({ message: "Company not found." }); return; }
+
+    const post = await prisma.post.create({
+      data: {
+        jobtitle,
+        location,
+        requirements,
+        Salary: parseFloat(Salary),
+        description: description ?? null,
+        companyId: company.id,
+      },
+    });
+
+    res.status(201).json({ message: "Post created.", post });
+  } catch (err) { next(err); }
+}
+
+// PATCH /api/company/posts/:postId
+export async function updatePost(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const postId = parseParam(req, res, "postId");
+    if (postId === null) return;
+
+    const company = await prisma.company.findUnique({
+      where: { accountId: req.user!.accountId },
+      select: { id: true },
+    });
+    if (!company) { res.status(404).json({ message: "Company not found." }); return; }
+
+    const existing = await prisma.post.findUnique({ where: { id: postId } });
+    if (!existing || existing.companyId !== company.id) {
+      res.status(403).json({ message: "Not authorized to edit this post." }); return;
+    }
+
+    const { jobtitle, location, requirements, Salary, description } = req.body;
+
+    const post = await prisma.post.update({
+      where: { id: postId },
+      data: {
+        ...(jobtitle && { jobtitle }),
+        ...(location && { location }),
+        ...(requirements && { requirements }),
+        ...(Salary !== undefined && { Salary: parseFloat(Salary) }),
+        ...(description !== undefined && { description }),
+      },
+    });
+
+    res.json({ message: "Post updated.", post });
+  } catch (err) { next(err); }
+}
+
+// DELETE /api/company/posts/:postId
+export async function deletePost(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const postId = parseParam(req, res, "postId");
+    if (postId === null) return;
+
+    const company = await prisma.company.findUnique({
+      where: { accountId: req.user!.accountId },
+      select: { id: true },
+    });
+    if (!company) { res.status(404).json({ message: "Company not found." }); return; }
+
+    const existing = await prisma.post.findUnique({ where: { id: postId } });
+    if (!existing || existing.companyId !== company.id) {
+      res.status(403).json({ message: "Not authorized to delete this post." }); return;
+    }
+
+    await prisma.post.delete({ where: { id: postId } });
+    res.json({ message: "Post deleted." });
+  } catch (err) { next(err); }
+}
