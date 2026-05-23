@@ -18,7 +18,7 @@ const generateToken = (account: Account, profileId: number): string => {
 export async function userRegister(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
         const { email, password, confirmPassword, firstName, lastName, gender, phoneNumber } = req.body;
-        if (!email || !password || !firstName || !lastName || !gender || !phoneNumber) {
+        if (!email || !password || !firstName || !lastName || !gender ) {
             res.status(400).json({ error: "Missing required fields" });
             return;
         }
