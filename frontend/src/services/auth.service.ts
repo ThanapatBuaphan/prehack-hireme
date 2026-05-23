@@ -1,4 +1,5 @@
 import api from "./api";
+import type { UserProfile } from "../context/ProfileContext";
 
 export interface AuthResponse {
   token: string;
@@ -7,6 +8,7 @@ export interface AuthResponse {
   email: string;
 }
 
+// ── User Register ──
 export interface UserRegisterPayload {
   firstName: string;
   lastName: string;
@@ -19,10 +21,11 @@ export interface UserRegisterPayload {
 
 export async function registerUser(payload: UserRegisterPayload): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>("/auth/register/user", payload);
-  saveAuth(data);
+  authService.saveAuth(data);
   return data;
 }
 
+// ── Company Register ──
 export interface CompanyRegisterPayload {
   email: string;
   password: string;
@@ -31,10 +34,11 @@ export interface CompanyRegisterPayload {
 
 export async function registerCompany(payload: CompanyRegisterPayload): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>("/auth/register/company", payload);
-  saveAuth(data);
+  authService.saveAuth(data);
   return data;
 }
 
+// ── Login ──
 export interface LoginPayload {
   email: string;
   password: string;
@@ -42,24 +46,41 @@ export interface LoginPayload {
 
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>("/auth/login", payload);
-  saveAuth(data);
+  authService.saveAuth(data);
   return data;
 }
 
-function saveAuth(data: AuthResponse) {
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("role", data.role);
-  localStorage.setItem("profileId", String(data.profileId));
-  localStorage.setItem("email", data.email);
-}
+// ── authService object (used by ProfileContext) ──
+export const authService = {
+  saveAuth(data: AuthResponse) {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", data.role);
+    localStorage.setItem("profileId", String(data.profileId));
+    localStorage.setItem("email", data.email);
+  },
 
-export function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("role");
-  localStorage.removeItem("profileId");
-  localStorage.removeItem("email");
-}
+  logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("profileId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("user");
+  },
 
-export function getRole(): string | null {
-  return localStorage.getItem("role");
-}
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem("token");
+  },
+
+  getStoredUser(): UserProfile | null {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? (JSON.parse(raw) as UserProfile) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  getRole(): "user" | "company" | null {
+    return localStorage.getItem("role") as "user" | "company" | null;
+  },
+};
