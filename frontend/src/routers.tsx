@@ -22,6 +22,8 @@ import ComProfile from "./modules/Profile/pages/comProfile";
 import JobHome from "./modules/easyApplication/pages/jobHomePage";
 import JobApplicants from "./modules/easyApplication/pages/jobApplicantsPage";
 import JobProfile from "./modules/Profile/pages/jobProfile";
+import JobHomePage from "./modules/easyApplication/pages/jobHomePage";
+import HomeRedirect from "./components/HomeRedirect";
 
 const mainRouter = createBrowserRouter([
   {
@@ -37,9 +39,9 @@ const mainRouter = createBrowserRouter([
       { path: "CreateAcc2user", element: <CreateAcc2user /> },
       { path: "CreateAcc3com", element: <CreateAcc3com /> },
       { path: "CreateAcc3user", element: <CreateAcc3user /> },
+      { path: "home", element: <ProtectedRoute><HomeRedirect /></ProtectedRoute> },
 
       // ฝั่ง Company routes
-      { path: "comHome", element: <ProtectedRoute role="company"><ComHome /></ProtectedRoute> },
       { path: "comMyPost", element: <ProtectedRoute role="company"><ComMyPost /></ProtectedRoute> },
       { path: "comCreatePost", element: <ProtectedRoute role="company"><ComCreatePost /></ProtectedRoute> },
       { path: "comApplicants", element: <ProtectedRoute role="company"><ComApplicants /></ProtectedRoute> },
@@ -48,7 +50,6 @@ const mainRouter = createBrowserRouter([
       { path: "/company/profile/:id", element: <ComProfile /> },
 
       // ฝั่ง Job seeker
-      { path: "jobHome", element: <ProtectedRoute role="user"><JobHome /></ProtectedRoute> },
       { path: "jobApplicants", element: <ProtectedRoute role="user"><JobApplicants /></ProtectedRoute> },
       { path: "/jobProfile", element: <Navigate to="/user/profile/me" replace /> },
       { path: "/user/profile/:id", element: <JobProfile /> },

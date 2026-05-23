@@ -10,7 +10,7 @@ import MyProfile from "../icons/My Profile.png";
 import Logout from "../icons/Logout.png";
 
 const staticMenuItems = [
-  { label: "Home", path: "/jobHome", icon: Home },
+  { label: "Home", path: "/home", icon: Home },
   { label: "My Applications", path: "/jobApplicants", icon: MyApplications },
 ];
 
