@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/auth.service";
+import { useProfile } from "../context/ProfileContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
 
+  const { refetchProfile } = useProfile();
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -36,6 +38,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const data = await login({ email: form.email, password: form.password });
+      await refetchProfile();
       if (data.role === "user") {
         navigate("/jobHome");
       } else {
@@ -53,9 +56,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-md w-full max-w-sm p-8 flex flex-col items-center">
 
-        {/* Logo */}
+        {/* Logo / Brand */}
         <div className="mb-6">
-          <img src="/src/icons/HireMe.png" alt="HireMe" className="h-30 w-auto object-contain" />
+          <img src="/src/icons/HireMe.png" alt="HireMe" className="h-16 w-auto object-contain" />
         </div>
 
         {/* Title */}
