@@ -50,8 +50,6 @@ const ProfileContext = createContext<ProfileContextType | null>(null);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = useState<UserProfile | null>(() => {
-    // ถ้า login อยู่ให้ดึง user จาก localStorage ก่อน
-    // เพื่อไม่ให้ sidebar หายตอน refresh
     if (authService.isLoggedIn()) {
       return authService.getStoredUser();
     }
