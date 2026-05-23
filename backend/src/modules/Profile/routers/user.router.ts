@@ -17,7 +17,7 @@ import {
 const router = Router();
 
 router.get("/profile", authenticate, requireRole("user"), getUserProfile);
-router.get("/profile/:id", authenticate, getUserProfileById);
+router.get("/profile/:id", getUserProfileById);
 
 
 router.patch("/profile", authenticate, requireRole("user"), uploadUserProfile, updateUserProfile);

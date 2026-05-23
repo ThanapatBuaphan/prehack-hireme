@@ -7,7 +7,7 @@ export interface UserProfile {
   email: string;
   role: "user" | "company";
 
-  //Job Seeker
+  // Job Seeker
   userId?: number;
   firstName?: string;
   lastName?: string;
@@ -17,7 +17,7 @@ export interface UserProfile {
   phoneNumber?: string;
   bio?: string | null;
 
-  //Company
+  // Company
   companyId?: number;
   companyName?: string;
   logo?: string | null;
@@ -48,35 +48,85 @@ interface ProfileContextType {
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
+// TODO: remove this DEV-only fallback when login/auth is complete enough for local testing.
+const DEVELOPMENT_FALLBACK_JOB_PROFILE: UserProfile = {
+  accountId: 1,
+  userId: 3,
+  role: "user",
+  email: "Alya@example.com",
+  firstName: "Alya",
+  lastName: "Chan",
+};
+
+// TODO: remove this DEV-only fallback when login/auth is complete enough for local testing.
+const DEVELOPMENT_FALLBACK_COMPANY_PROFILE: UserProfile = {
+  accountId: 1,
+  companyId: 2,
+  role: "company",
+  email: "pure@gmail.com",
+  companyName: "Pure",
+};
+
+function getDevelopmentFallbackProfile(): UserProfile {
+  const pathname = window.location.pathname.toLowerCase();
+  const isCompanyPage =
+    pathname.startsWith("/com") || pathname.includes("company-acceptance");
+
+  return isCompanyPage
+    ? DEVELOPMENT_FALLBACK_COMPANY_PROFILE
+    : DEVELOPMENT_FALLBACK_JOB_PROFILE;
+}
+
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = useState<UserProfile | null>(() => {
     const stored = authService.getStoredUser();
-    return stored ?? null;
+
+    if (import.meta.env.DEV && !authService.isLoggedIn()) {
+      return getDevelopmentFallbackProfile();
+    }
+
+    if (stored) {
+      return stored;
+    }
+
+    return null;
   });
   const [posts, setPosts] = useState<JobPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function fetchProfile() {
-    if (!authService.isLoggedIn()) { 
-      setLoading(false); 
-      setProfileState(null); 
-      return; 
+    if (!authService.isLoggedIn()) {
+      if (import.meta.env.DEV) {
+        setProfileState(getDevelopmentFallbackProfile());
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
+      setProfileState(null);
+      return;
     }
+
     setLoading(true);
     try {
-      const user = await userService.getProfile(); 
+      const user = await userService.getProfile();
       setProfileState(user);
       localStorage.setItem("user", JSON.stringify(user));
     } catch (error) {
       console.error("Failed to fetch profile:", error);
-      setProfileState(null);
+
+      if (import.meta.env.DEV) {
+        setProfileState(getDevelopmentFallbackProfile());
+      } else {
+        setProfileState(null);
+      }
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { 
-    fetchProfile(); 
+  useEffect(() => {
+    fetchProfile();
   }, []);
 
   function setProfile(p: UserProfile) {
@@ -85,22 +135,22 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    authService.logout(); 
+    authService.logout();
     setProfileState(null);
     setPosts([]);
     localStorage.removeItem("user");
   }
 
   return (
-    <ProfileContext.Provider 
-      value={{ 
-        profile, 
-        setProfile, 
-        posts, 
-        setPosts, 
-        loading, 
+    <ProfileContext.Provider
+      value={{
+        profile,
+        setProfile,
+        posts,
+        setPosts,
+        loading,
         refetchProfile: fetchProfile,
-        logout 
+        logout,
       }}
     >
       {children}
