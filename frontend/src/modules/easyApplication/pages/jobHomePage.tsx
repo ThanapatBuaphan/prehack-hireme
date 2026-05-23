@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import JobCard, { type JobPosting } from "../components/jobCard";
 import JobDetail from "../components/jobDetail";
+import SearchBar from "../components/searchBar";
 import { useDrawer } from "../../../context/DrawerContext";
 import { useProfile } from "../../../context/ProfileContext";
 import MenuBar from "../../../icons/Menu-bar.png";
@@ -10,6 +11,26 @@ import {
   getAvailableJobPosts,
   getJobSeekerApplications,
 } from "../apis/easyApplication.api";
+
+const SALARY_OPTIONS = [
+  { label: "< 30K", min: undefined, max: 30000 },
+  { label: "30K–60K", min: 30000, max: 60000 },
+  { label: "60K–100K", min: 60000, max: 100000 },
+  { label: "> 100K", min: 100000, max: undefined },
+];
+
+function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick}
+      className={`flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium transition
+        ${active ? "border-[#6d35d3] bg-[#6d35d3] text-white" : "border-[#d0d0d0] bg-white text-[#444] hover:border-[#6d35d3] hover:text-[#6d35d3]"}`}>
+      {label}
+      <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+  );
+}
 
 export default function JobHomePage() {
   const { setOpen } = useDrawer();
@@ -22,61 +43,74 @@ export default function JobHomePage() {
   const [applyingJobId, setApplyingJobId] = useState<number | null>(null);
   const [applyError, setApplyError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedSalary, setSelectedSalary] = useState<typeof SALARY_OPTIONS[0] | null>(null);
+
+  async function loadJobs(params?: { q?: string; location?: string; minSalary?: number; maxSalary?: number }) {
     let isMounted = true;
+    setIsLoading(true);
+    setLoadError(null);
 
-    async function loadJobs() {
-      setIsLoading(true);
-      setLoadError(null);
+    try {
+      const [availableJobs, existingApplications] = await Promise.all([
+        getAvailableJobPosts(params),
+        profile?.userId ? getJobSeekerApplications(profile.userId) : Promise.resolve([]),
+      ]);
 
-      try {
-        const [availableJobs, existingApplications] = await Promise.all([
-          getAvailableJobPosts(),
-          profile?.userId
-            ? getJobSeekerApplications(profile.userId)
-            : Promise.resolve([]),
-        ]);
+      const appliedPostIds = new Set(
+        existingApplications.map((application) => application.postId).filter((postId): postId is number => postId !== null),
+      );
 
-        const appliedPostIds = new Set(
-          existingApplications
-            .map((application) => application.postId)
-            .filter((postId): postId is number => postId !== null),
-        );
-
-        if (isMounted) {
-          setJobs(
-            availableJobs.map((job) => ({
-              ...job,
-              applied: appliedPostIds.has(job.id),
-            })),
-          );
-          setSelectedJobId(availableJobs[0]?.id ?? null);
-        }
-      } catch (error) {
-        console.error("Failed to load available job posts:", error);
-
-        if (isMounted) {
-          setJobs([]);
-          setSelectedJobId(null);
-          setLoadError(
-            error instanceof Error
-              ? error.message
-              : "Failed to load available job posts.",
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+      if (isMounted) {
+        setJobs(availableJobs.map((job) => ({ ...job, applied: appliedPostIds.has(job.id) })));
+        setSelectedJobId(availableJobs[0]?.id ?? null);
       }
+    } catch (error) {
+      console.error("Failed to load available job posts:", error);
+      if (isMounted) {
+        setJobs([]);
+        setSelectedJobId(null);
+        setLoadError(error instanceof Error ? error.message : "Failed to load available job posts.");
+      }
+    } finally {
+      if (isMounted) setIsLoading(false);
     }
 
-    void loadJobs();
+    return () => { isMounted = false; };
+  }
 
-    return () => {
-      isMounted = false;
-    };
+  useEffect(() => {
+    void loadJobs();
   }, [profile?.userId]);
+
+  const getParams = (overrides?: { q?: string; location?: string | null; salary?: typeof SALARY_OPTIONS[0] | null }) => ({
+    q: (overrides?.q ?? searchQuery) || undefined,
+    location: (overrides?.location ?? selectedLocation) || undefined,
+    minSalary: (overrides?.salary ?? selectedSalary)?.min,
+    maxSalary: (overrides?.salary ?? selectedSalary)?.max,
+  });
+
+  const handleSearch = () => void loadJobs(getParams());
+
+  const toggleLocation = (loc: string) => {
+    const next = selectedLocation === loc ? null : loc;
+    setSelectedLocation(next);
+    void loadJobs(getParams({ location: next }));
+  };
+
+  const toggleSalary = (opt: typeof SALARY_OPTIONS[0]) => {
+    const next = selectedSalary?.label === opt.label ? null : opt;
+    setSelectedSalary(next);
+    void loadJobs(getParams({ salary: next }));
+  };
+
+  const clearAll = () => {
+    setSearchQuery("");
+    setSelectedLocation(null);
+    setSelectedSalary(null);
+    void loadJobs({});
+  };
 
   const selectedJob = jobs.find((job) => job.id === selectedJobId) ?? null;
 
@@ -99,16 +133,12 @@ export default function JobHomePage() {
 
       setJobs((currentJobs) =>
         currentJobs.map((currentJob) =>
-          currentJob.id === job.id
-            ? { ...currentJob, applied: true }
-            : currentJob,
+          currentJob.id === job.id ? { ...currentJob, applied: true } : currentJob,
         ),
       );
     } catch (error) {
       console.error("Failed to apply for job:", error);
-      setApplyError(
-        getEasyApplicationErrorMessage(error, "Failed to apply for this job."),
-      );
+      setApplyError(getEasyApplicationErrorMessage(error, "Failed to apply for this job."));
     } finally {
       setApplyingJobId(null);
     }
@@ -118,18 +148,30 @@ export default function JobHomePage() {
     <main className="h-screen min-w-0 overflow-hidden bg-white">
       <section className="mx-auto flex h-full w-full max-w-[1100px] min-w-0 flex-col px-3 py-4 sm:px-6 lg:px-9 lg:py-7">
         <div className="mb-4 flex items-center gap-4 border-b border-[#eeeeee] bg-white px-3 py-3 md:hidden">
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-label="Open navigation menu"
-            className="flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-[#f8f8f8]"
-          >
+          <button type="button" onClick={() => setOpen(true)} aria-label="Open navigation menu"
+            className="flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-[#f8f8f8]">
             <img src={MenuBar} alt="" className="h-7 w-7 object-contain" />
           </button>
+          <h1 className="font-serif text-base font-semibold text-black">Job Home</h1>
+        </div>
 
-          <h1 className="font-serif text-base font-semibold text-black">
-            Job Home
-          </h1>
+
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onSearch={handleSearch}
+          location={selectedLocation ?? ""}
+          onLocationChange={(v) => setSelectedLocation(v || null)}
+        />
+        <div className="mt-3 mb-1 flex flex-wrap gap-2">
+          {SALARY_OPTIONS.map((opt) => (
+            <FilterChip key={opt.label} label={opt.label} active={selectedSalary?.label === opt.label} onClick={() => toggleSalary(opt)} />
+          ))}
+          {(searchQuery || selectedLocation || selectedSalary) && (
+            <button onClick={clearAll} className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-400 hover:text-red-400 hover:border-red-300 transition">
+              Clear all ×
+            </button>
+          )}
         </div>
 
         <div className="mt-7 grid min-h-0 flex-1 min-w-0 gap-6 lg:grid-cols-[minmax(320px,380px)_minmax(360px,1fr)] lg:gap-10">

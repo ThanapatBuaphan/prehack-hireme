@@ -139,6 +139,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setProfileState(null);
     setPosts([]);
     localStorage.removeItem("user");
+    window.location.href = "/LoginPage";
   }
 
   return (
