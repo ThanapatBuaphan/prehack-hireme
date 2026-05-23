@@ -99,12 +99,13 @@ export const deleteApplicationController = async (
 };
 
 export const getAvailableJobPostsController = async (
-  _req: Request,
+  req: Request,
   res: Response,
 ) => {
   try {
-    const posts = await getAvailableJobPosts();
-
+    const { q, location, minSalary, maxSalary } = req.query as Record<string, string>;
+    const posts = await getAvailableJobPosts({ q, location, minSalary: minSalary ? Number(minSalary) : undefined, maxSalary: maxSalary ? Number(maxSalary) : undefined });
+ 
     return res.status(200).json({
       message: "Job posts fetched successfully",
       data: posts.map((post) => ({

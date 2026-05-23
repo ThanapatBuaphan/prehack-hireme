@@ -136,8 +136,24 @@ export const deleteApplication = async (applyId: number) => {
   });
 };
 
-export const getAvailableJobPosts = async () => {
+export const getAvailableJobPosts = async (params?: { q?: string; location?: string; minSalary?: number; maxSalary?: number }) => {
+  const where: any = {};
+  if (params?.q?.trim()) {
+    where.OR = [
+      { jobtitle: { contains: params.q.trim() } },
+      { description: { contains: params.q.trim() } },
+      { requirements: { contains: params.q.trim() } },
+    ];
+  }
+  if (params?.location?.trim()) where.location = { contains: params.location.trim() };
+  if (params?.minSalary || params?.maxSalary) {
+    where.Salary = {
+      ...(params.minSalary && { gte: params.minSalary }),
+      ...(params.maxSalary && { lte: params.maxSalary }),
+    };
+  }
   return prisma.post.findMany({
+    where,
     select: {
       id: true,
       companyId: true,
